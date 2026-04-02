@@ -2,24 +2,23 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 
-// window.storage polyfill for local dev (backed by localStorage)
-if (!window.storage) {
-  window.storage = {
-    get: async (key) => {
-      const v = localStorage.getItem(key);
-      return v ? JSON.parse(v) : null;
-    },
-    set: async (key, value) => {
-      localStorage.setItem(key, JSON.stringify(value));
-    },
-    delete: async (key) => {
-      localStorage.removeItem(key);
-    },
-    list: async (prefix) => {
-      return Object.keys(localStorage).filter((k) => k.startsWith(prefix));
-    },
-  };
-}
+// window.storage — backed by the /api/data endpoint (same data on every device)
+window.storage = {
+  get: async (_key) => {
+    const res = await fetch("/api/data");
+    if (!res.ok) return null;
+    return res.json();
+  },
+  set: async (_key, value) => {
+    await fetch("/api/data", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(value),
+    });
+  },
+  delete: async (_key) => {},
+  list: async (_prefix) => [],
+};
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
